@@ -1,0 +1,6 @@
+{
+  "name": "Crypto Check Bot",
+  "description": "Telegram WebApp бот для создания и активации крипто-чеков с поддержкой USDT во всех сетях (TON, TRC-20, BEP-20, ERC-20, Solana, Polygon, Arbitrum), интерактивной капчей и кошельком",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
