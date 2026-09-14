@@ -2,20 +2,25 @@ import express, { Request, Response } from 'express';
 import crypto from 'crypto';
 import db from './src/db.js';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { mnemonicNew, mnemonicToPrivateKey } from '@ton/crypto';
 import { TonClient, WalletContractV4, Address, fromNano, toNano, internal, beginCell } from '@ton/ton';
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+const apiLogger = (req: Request, res: Response, next: any) => {
+  if (req.path.startsWith('/api/')) {
+    console.log(`[${new Date().toISOString()}] API Request: ${req.method} ${req.path}`);
+  }
+  next();
+};
+app.use(apiLogger);
+
 
 const BOT_TOKEN = process.env.BOT_TOKEN || 'mock_token';
 
@@ -799,7 +804,7 @@ app.get('/api/cryptobot/status', async (req: Request, res: Response) => {
 });
 
 // 2.2 Create Real Telegram Crypto Pay Invoice
-app.post('/api/cryptobot/create-invoice', async (req: Request, res: Response) => {
+app.post('/api/cryptobot/create-invoice', tgAuth, async (req: Request, res: Response) => {
   const { asset = 'TON', amount, description = 'Пополнение баланса бота' } = req.body;
 
   if (!amount || parseFloat(amount) <= 0) {
@@ -856,7 +861,7 @@ app.post('/api/cryptobot/create-invoice', async (req: Request, res: Response) =>
 });
 
 // 2.3 Create Real Telegram Crypto Check
-app.post('/api/cryptobot/create-check', async (req: Request, res: Response) => {
+app.post('/api/cryptobot/create-check', tgAuth, async (req: Request, res: Response) => {
   const { asset = 'TON', amount, pin_to_user_id } = req.body;
 
   if (!amount || parseFloat(amount) <= 0) {
@@ -907,7 +912,7 @@ app.post('/api/cryptobot/create-check', async (req: Request, res: Response) => {
 });
 
 // 2.4 Transfer via Crypto Pay to Telegram user_id
-app.post('/api/cryptobot/transfer', async (req: Request, res: Response) => {
+app.post('/api/cryptobot/transfer', tgAuth, async (req: Request, res: Response) => {
   const { user_id, asset = 'TON', amount, comment } = req.body;
 
   if (!user_id || !amount) {
@@ -960,8 +965,16 @@ app.post('/api/cryptobot/transfer', async (req: Request, res: Response) => {
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
+  let dbStatus = 'ok';
+  try {
+    db.prepare('SELECT 1').get();
+  } catch (err) {
+    dbStatus = 'error';
+  }
+  
   res.json({
     status: 'ok',
+    database: dbStatus,
     network: TON_NETWORK,
     tonEndpoint: TONCENTER_ENDPOINT,
     cryptoPayConfigured: Boolean(CRYPTO_PAY_API_TOKEN),
