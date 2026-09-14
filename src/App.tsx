@@ -54,8 +54,8 @@ export default function App() {
     });
   };
 
-  const handleWithdraw = (cryptoId: CryptoId, amount: number, networkId: any, targetAddress: string, memo?: string) => {
-    const res = wallet.withdraw(cryptoId, amount, networkId, targetAddress, memo);
+  const handleWithdraw = async (cryptoId: CryptoId, amount: number, networkId: any, targetAddress: string, memo?: string) => {
+    const res = await wallet.withdraw(cryptoId, amount, networkId, targetAddress, memo);
     if (res.success && targetAddress) {
       addToast({
         title: 'Вывод средств инициирован',
@@ -66,8 +66,8 @@ export default function App() {
     return res;
   };
 
-  const handleTransfer = (cryptoId: CryptoId, amount: number, userId: string, networkId?: any) => {
-    const res = wallet.transfer(cryptoId, amount, userId, networkId);
+  const handleTransfer = async (cryptoId: CryptoId, amount: number, userId: string, networkId?: any) => {
+    const res = await wallet.transfer(cryptoId, amount, userId, networkId);
     if (res.success) {
       addToast({
         title: 'Перевод выполнен',
