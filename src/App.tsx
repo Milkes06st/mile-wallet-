@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { CryptoCheck, ActivationAttempt, BotTab, CryptoId } from './types';
 import { INITIAL_CHECK, INITIAL_ATTEMPTS } from './data/cryptoData';
 import { CheckView } from './components/CheckView';
+import { CheckStub } from './components/CheckStub';
 import { WalletView } from './components/WalletView';
 import { AdminPanel } from './components/AdminPanel';
 import { HomeView } from './components/HomeView';
@@ -300,19 +301,7 @@ export default function App() {
             
             {tab === 'p2p' && <P2PStub />}
             
-            {tab === 'check' && (
-              <div className="w-full flex-1 flex flex-col">
-                <CheckView
-                  key={resetKey}
-                  check={check}
-                  onActivateSuccess={handleActivateSuccess}
-                  onOpenAdmin={() => setTab('admin')}
-                  onOpenWallet={() => setTab('wallet')}
-                  onClaimToWallet={handleClaimToWallet}
-                  onUpdateCheck={setCheck}
-                />
-              </div>
-            )}
+            {tab === 'check' && <CheckStub />}
             
             {tab === 'admin' && (
               <div className="w-full max-w-7xl mx-auto p-4 sm:p-6">

@@ -37,12 +37,33 @@ export const DepositModal: React.FC<DepositModalProps> = ({
   );
 
   const [copiedAddress, setCopiedAddress] = useState(false);
-  const [copiedContract, setCopiedContract] = useState(false);
   const [testAmount, setTestAmount] = useState<number>(initialCryptoId === 'USDT' ? 1 : 10);
   const [depositSuccessMsg, setDepositSuccessMsg] = useState<string | null>(null);
 
   const realTonWallet = RealCryptoService.getStoredWallet();
   const isRealTon = selectedCrypto === 'TON' && selectedNetwork === 'TON' && !!realTonWallet;
+
+  const NETWORK_NAMES: Record<string, string> = {
+    'TON': 'The Open Network (TON)',
+    'TRC20': 'Tron (TRC20)',
+    'ERC20': 'Ethereum (ERC20)',
+    'BEP20': 'BNB Smart Chain (BEP20)',
+    'SOL': 'Solana (SOL)',
+    'POLYGON': 'Polygon (MATIC)',
+    'ARBITRUM': 'Arbitrum One',
+    'BTC': 'Bitcoin (BTC)',
+  };
+
+  const MOCK_ADDRESSES: Record<string, string> = {
+    'TON': 'UQCE7QUXismmeSXE5icCg3zcwS-KblIkobh34wrw-QzsQrty',
+    'TRC20': 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+    'ERC20': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+    'BEP20': '0x55d398326f99059fF775485246999027B3197955',
+    'SOL': 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+    'POLYGON': '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+    'ARBITRUM': '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+    'BTC': 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+  };
 
   const depositConfig = isRealTon
     ? {
@@ -52,10 +73,15 @@ export const DepositModal: React.FC<DepositModalProps> = ({
       }
     : DEPOSIT_CONFIGS[selectedCrypto]?.[selectedNetwork] ||
       DEPOSIT_CONFIGS[selectedCrypto]?.['TON'] || {
-        address: 'UQCE7QUXismmeSXE5icCg3zcwS-KblIkobh34wrw-QzsQrty',
+        address: MOCK_ADDRESSES[selectedNetwork] || MOCK_ADDRESSES['TON'],
         network: selectedNetwork,
         minDeposit: 0.1,
       };
+
+  // Assign full mock address if not Real Ton
+  if (!isRealTon) {
+    depositConfig.address = MOCK_ADDRESSES[selectedNetwork] || MOCK_ADDRESSES['TON'];
+  }
 
   const handleCopyAddress = () => {
     navigator.clipboard.writeText(depositConfig.address);
@@ -73,10 +99,15 @@ export const DepositModal: React.FC<DepositModalProps> = ({
     }, 1500);
   };
 
-  // Mock contract address for UI
-  const contractAddress = selectedCrypto === 'USDT' 
-    ? 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs'
-    : 'Not available';
+  // Icon mapping by network
+  const getNetworkIconId = (netId: string) => {
+    switch (netId) {
+      case 'TRC20': return 'TRX';
+      case 'ERC20': case 'ARBITRUM': case 'POLYGON': return 'ETH';
+      case 'BEP20': return 'BNB';
+      default: return netId;
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-[#000000] text-white flex flex-col font-sans animate-in slide-in-from-bottom-2">
@@ -96,7 +127,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
         <div className="bg-[#1c2431] border border-slate-800 rounded-[20px] p-4 flex gap-3 items-start mb-6">
           <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
           <p className="text-[14px] text-slate-200 leading-snug">
-            Вносите только {cryptoItem.symbol} в сети The Open Network ({selectedNetwork})-{cryptoItem.symbol}. Если вы отправите другую монету или используете другую сеть, ваши средства будут потеряны.
+            Вносите только {cryptoItem.symbol} в сети {NETWORK_NAMES[selectedNetwork] || selectedNetwork}. Если вы отправите другую монету или используете другую сеть, ваши средства будут потеряны.
           </p>
         </div>
 
@@ -131,37 +162,12 @@ export const DepositModal: React.FC<DepositModalProps> = ({
         <div className="bg-[#10141a] border border-slate-800/80 rounded-[24px] overflow-hidden">
           {/* Network */}
           <div className="px-5 py-4 flex items-center gap-3 border-b border-slate-800/60">
-            <div className="w-7 h-7 bg-sky-500 rounded-full flex items-center justify-center">
-              <CryptoIcon id="TON" size={28} />
+            <div className="w-7 h-7 bg-sky-500/20 rounded-full flex items-center justify-center">
+              <CryptoIcon id={getNetworkIconId(selectedNetwork)} size={28} />
             </div>
-            <span className="text-[17px] text-slate-200">The Open Network ({selectedNetwork})</span>
+            <span className="text-[17px] text-slate-200">{NETWORK_NAMES[selectedNetwork] || selectedNetwork}</span>
           </div>
           
-          {/* Contract Address */}
-          {selectedCrypto !== 'TON' && (
-            <div className="px-5 py-4 flex flex-col gap-1 border-b border-slate-800/60">
-              <div 
-                className="flex items-center justify-between cursor-pointer"
-                onClick={() => {
-                  navigator.clipboard.writeText(contractAddress);
-                  setCopiedContract(true);
-                  setTimeout(() => setCopiedContract(false), 2000);
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 bg-teal-500 rounded-full flex items-center justify-center">
-                    <CryptoIcon id={selectedCrypto} size={28} />
-                  </div>
-                  <span className="text-[17px] text-slate-200">Адрес контракта ({cryptoItem.symbol})</span>
-                </div>
-                {copiedContract ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5 text-slate-500" />}
-              </div>
-              <div className="text-[14px] text-slate-400 font-mono break-all mt-1 pl-10">
-                {contractAddress}
-              </div>
-            </div>
-          )}
-
           {/* Wallet Address */}
           <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between gap-4">
             <div>
